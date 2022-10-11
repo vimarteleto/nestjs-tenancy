@@ -181,7 +181,13 @@ export class TenancyCoreModule implements OnApplicationShutdown {
         const {
             tenantIdentifier = null,
             isTenantFromSubdomain = false,
+            customGlobalTenant = null
         } = moduleOptions;
+
+        // Pull the tenant id from the option
+        if (customGlobalTenant) {
+            return this.getTenantFromCustomOption(customGlobalTenant)
+        }
 
         // Pull the tenant id from the subdomain
         if (isTenantFromSubdomain) {
@@ -260,6 +266,10 @@ export class TenancyCoreModule implements OnApplicationShutdown {
         }
 
         return tenantId;
+    }
+
+    private static getTenantFromCustomOption(customGlobalTenant: string) {
+        return customGlobalTenant;
     }
 
     /**
