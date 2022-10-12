@@ -181,13 +181,8 @@ export class TenancyCoreModule implements OnApplicationShutdown {
         const {
             tenantIdentifier = null,
             isTenantFromSubdomain = false,
-            customGlobalTenant = null
+            globalTenant = null
         } = moduleOptions;
-
-        // Pull the tenant id from the option
-        if (customGlobalTenant) {
-            return this.getTenantFromCustomOption(customGlobalTenant)
-        }
 
         // Pull the tenant id from the subdomain
         if (isTenantFromSubdomain) {
@@ -200,7 +195,7 @@ export class TenancyCoreModule implements OnApplicationShutdown {
                 throw new BadRequestException(`${tenantIdentifier} is mandatory`);
             }
 
-            return this.getTenantFromRequest(isFastifyAdaptor, req, tenantIdentifier);
+            return this.getTenantFromRequest(isFastifyAdaptor, req, tenantIdentifier, globalTenant);
         }
     }
 
@@ -215,15 +210,18 @@ export class TenancyCoreModule implements OnApplicationShutdown {
      * @returns
      * @memberof TenancyCoreModule
      */
-    private static getTenantFromRequest(isFastifyAdaptor: boolean, req: Request, tenantIdentifier: string) {
+    private static getTenantFromRequest(isFastifyAdaptor: boolean, req: Request, tenantIdentifier: string, globalTenant: string | null) {
         let tenantId = '';
 
         if (isFastifyAdaptor) { // For Fastify
             // Get the tenant id from the header
             tenantId = req.headers[`${tenantIdentifier || ''}`.toLowerCase()]?.toString() || '';
         } else { // For Express - Default
-            // Get the tenant id from the request
-            tenantId = req.get(`${tenantIdentifier}`) || '';
+            if (typeof req.get === 'function') {
+                tenantId = req.get(`${tenantIdentifier}`) || '';
+            } else {
+                tenantId = this.getTenantFromGlobalOption(globalTenant);
+            }
         }
 
         // Validate if tenant id is present
@@ -268,8 +266,10 @@ export class TenancyCoreModule implements OnApplicationShutdown {
         return tenantId;
     }
 
-    private static getTenantFromCustomOption(customGlobalTenant: string) {
-        return customGlobalTenant;
+    private static getTenantFromGlobalOption(globalTenant: string | null) {
+        if (globalTenant == 'Tenant') {
+            return global.Tenant;
+        }
     }
 
     /**

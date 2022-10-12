@@ -48,7 +48,7 @@ export interface TenancyModuleOptions extends Record<string, any> {
     /**
      * Tenant id will be extracted using the keyword from the custom global tenant option
      */
-    customGlobalTenant?: string;
+    globalTenant?: string;
 }
 
 /**
